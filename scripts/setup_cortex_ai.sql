@@ -522,20 +522,22 @@ $$;
 ----- Automated URL Refresh System -----
 -- Presigned URLs expire after 24 hours, so refresh every 12 hours to ensure links remain valid
 
-CREATE OR REPLACE TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_PRESIGNED_URLS_TASK
+CREATE OR REPLACE TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_NOTES_PRESIGNED_URLS_TASK
   WAREHOUSE = CLAIMS_AGENT_WH
   SCHEDULE = 'USING CRON 0 1,13 * * * America/New_York'  -- Runs twice daily at 1:00 AM and 1:00 PM EST
-  COMMENT = 'Refreshes presigned URLs every 12 hours to keep download links valid'
+  COMMENT = 'Refreshes presigned URLs for Notes Chunk Table every 12 hours to keep download links valid'
 AS
-BEGIN
-  -- Update Notes Chunk Table URLs
   UPDATE INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.NOTES_CHUNK_TABLE
   SET file_url = GET_PRESIGNED_URL('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', FILENAME, 86400);
-  
-  -- Update Guidelines Chunk Table URLs
+
+CREATE OR REPLACE TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_GUIDELINES_PRESIGNED_URLS_TASK
+  WAREHOUSE = CLAIMS_AGENT_WH
+  SCHEDULE = 'USING CRON 0 1,13 * * * America/New_York'  -- Runs twice daily at 1:00 AM and 1:00 PM EST
+  COMMENT = 'Refreshes presigned URLs for Guidelines Chunk Table every 12 hours to keep download links valid'
+AS
   UPDATE INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.GUIDELINES_CHUNK_TABLE
   SET file_url = GET_PRESIGNED_URL('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', FILENAME, 86400);
-END;
 
--- Activate the task to start automatic URL refresh
-ALTER TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_PRESIGNED_URLS_TASK RESUME;
+-- Activate the tasks to start automatic URL refresh
+ALTER TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_NOTES_PRESIGNED_URLS_TASK RESUME;
+ALTER TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_GUIDELINES_PRESIGNED_URLS_TASK RESUME;
