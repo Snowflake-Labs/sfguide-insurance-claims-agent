@@ -1,5 +1,5 @@
 USE ROLE CLAIMS_AGENT_ROLE;
-USE DATABASE INS_CO;
+USE DATABASE INSURANCE_CLAIMS_DEMO;
 USE SCHEMA LOSS_CLAIMS;
 USE WAREHOUSE CLAIMS_AGENT_WH;
 
@@ -22,13 +22,13 @@ FROM
             RELATIVE_PATH,
             TO_VARCHAR(
                 SNOWFLAKE.CORTEX.PARSE_DOCUMENT(
-                    '@INS_CO.loss_claims.loss_evidence',
+                    '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence',
                     RELATIVE_PATH,
                     {'mode': 'OCR'}
                 ):content
             ) AS EXTRACTED_CONTENT
         FROM
-            DIRECTORY('@INS_CO.loss_claims.loss_evidence')
+            DIRECTORY('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence')
         WHERE
             RELATIVE_PATH LIKE '%Claim_Note%'
     ) AS t1,
@@ -49,13 +49,13 @@ SELECT
     t1.RELATIVE_PATH AS FILENAME,
     TO_VARCHAR(
         SNOWFLAKE.CORTEX.PARSE_DOCUMENT(
-            '@INS_CO.loss_claims.loss_evidence',
+            '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence',
             t1.RELATIVE_PATH,
             {'mode': 'OCR'}
         ):content
     ) AS EXTRACTED_CONTENT
 FROM
-    DIRECTORY('@INS_CO.loss_claims.loss_evidence') AS t1
+    DIRECTORY('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence') AS t1
 WHERE
     t1.RELATIVE_PATH LIKE '%Guideline%';
 
@@ -79,13 +79,13 @@ FROM
             RELATIVE_PATH,
             TO_VARCHAR(
                 SNOWFLAKE.CORTEX.PARSE_DOCUMENT(
-                    '@INS_CO.loss_claims.loss_evidence',
+                    '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence',
                     RELATIVE_PATH,
                     {'mode': 'OCR'}
                 ):content
             ) AS EXTRACTED_CONTENT
         FROM
-            DIRECTORY('@INS_CO.loss_claims.loss_evidence')
+            DIRECTORY('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence')
         WHERE
             RELATIVE_PATH LIKE '%invoice%'
     ) AS t1,
@@ -101,7 +101,7 @@ CREATE OR REPLACE TABLE NOTES_CHUNK_TABLE AS
 SELECT
     FILENAME,
     CLAIM_NO,  -- Add this line to include the claim number
-    GET_PRESIGNED_URL('@INS_CO.loss_claims.loss_evidence', FILENAME, 86400) AS file_url,
+    GET_PRESIGNED_URL('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', FILENAME, 86400) AS file_url,
     CONCAT(FILENAME, ': ', c.value::TEXT) AS chunk,
     'English' AS language
 FROM
@@ -116,7 +116,7 @@ FROM
 CREATE OR REPLACE TABLE GUIDELINES_CHUNK_TABLE AS
 SELECT
     FILENAME,
-    GET_PRESIGNED_URL('@INS_CO.loss_claims.loss_evidence', FILENAME, 86400) AS file_url,
+    GET_PRESIGNED_URL('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', FILENAME, 86400) AS file_url,
     CONCAT(FILENAME, ': ', c.value::TEXT) AS chunk,
     'English' AS language
 FROM
@@ -133,7 +133,7 @@ FROM
 
 CREATE OR REPLACE
 CORTEX SEARCH SERVICE 
-ins_co_claim_notes
+INSURANCE_CLAIMS_DEMO_claim_notes
   ON chunk
   ATTRIBUTES file_url, claim_no, filename
   WAREHOUSE = CLAIMS_AGENT_WH
@@ -150,7 +150,7 @@ AS (
 
 CREATE OR REPLACE
 CORTEX SEARCH SERVICE 
-ins_co_guidelines
+INSURANCE_CLAIMS_DEMO_guidelines
   ON chunk
   ATTRIBUTES file_url, filename
   WAREHOUSE = CLAIMS_AGENT_WH
@@ -164,7 +164,7 @@ AS (
   FROM GUIDELINES_CHUNK_TABLE
 );
 
-CREATE OR REPLACE FUNCTION INS_CO.LOSS_CLAIMS.CLASSIFY_DOCUMENT("FILE_NAME" VARCHAR, "STAGE_NAME" VARCHAR DEFAULT '@INS_CO.LOSS_CLAIMS.LOSS_EVIDENCE')
+CREATE OR REPLACE FUNCTION INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CLASSIFY_DOCUMENT("FILE_NAME" VARCHAR, "STAGE_NAME" VARCHAR DEFAULT '@INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.LOSS_EVIDENCE')
 RETURNS OBJECT
 LANGUAGE SQL
 AS '
@@ -196,12 +196,12 @@ AS '
     FROM classification_result
 ';
 
-CREATE OR REPLACE FUNCTION INS_CO.LOSS_CLAIMS.PARSE_DOCUMENT_FROM_STAGE("FILE_NAME" VARCHAR)
+CREATE OR REPLACE FUNCTION INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.PARSE_DOCUMENT_FROM_STAGE("FILE_NAME" VARCHAR)
 RETURNS VARIANT
 LANGUAGE SQL
 AS '
     SELECT AI_PARSE_DOCUMENT(
-        TO_FILE(''@ins_co.loss_claims.loss_evidence'', file_name),
+        TO_FILE(''@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence'', file_name),
         {
             ''mode'': ''LAYOUT'',
             ''page_split'': TRUE
@@ -209,7 +209,7 @@ AS '
     )::VARIANT
 ';
 
-CREATE OR REPLACE FUNCTION INS_CO.LOSS_CLAIMS.GET_IMAGE_SUMMARY("IMAGE_FILE" VARCHAR, "STAGE_NAME" VARCHAR)
+CREATE OR REPLACE FUNCTION INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.GET_IMAGE_SUMMARY("IMAGE_FILE" VARCHAR, "STAGE_NAME" VARCHAR)
 RETURNS VARCHAR
 LANGUAGE SQL
 AS '
@@ -220,7 +220,7 @@ AS '
     )
 ';
 
-CREATE OR REPLACE PROCEDURE INS_CO.LOSS_CLAIMS.TRANSCRIBE_AUDIO_SIMPLE("FILE_NAME" VARCHAR, "STAGE_NAME" VARCHAR DEFAULT '@loss_evidence')
+CREATE OR REPLACE PROCEDURE INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.TRANSCRIBE_AUDIO_SIMPLE("FILE_NAME" VARCHAR, "STAGE_NAME" VARCHAR DEFAULT '@loss_evidence')
 RETURNS OBJECT
 LANGUAGE SQL
 EXECUTE AS OWNER
@@ -261,7 +261,7 @@ END;
 
 --CREATE CORTEX ANALYST YAML FILE
 
-create or replace semantic view INS_CO.LOSS_CLAIMS.CA_INS_CO
+create or replace semantic view INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CA_INSURANCE_CLAIMS_DEMO
 	tables (
 		AUTHORIZATION primary key (PERFORMER_ID),
 		CLAIMS primary key (CLAIM_NO),
@@ -343,7 +343,7 @@ $$
           "question": "Was a payment made in excess of the reserve amount for claim 1899?"
         },
         {
-          "question": "Can you transcribe the media file 'consultation_5_mix_es_en.wav stored in '@ins_co.loss_claims.loss_evidence'?"
+          "question": "Can you transcribe the media file 'consultation_5_mix_es_en.wav stored in '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence'?"
         },
         {
           "question": "What is the callers intent?"
@@ -370,7 +370,7 @@ $$
         "tool_spec": {
           "type": "cortex_analyst_text_to_sql",
           "name": "CA_INS",
-          "description": "AUTHORIZATION:\n- Database: INS_CO, Schema: LOSS_CLAIMS\n- This table manages authorization limits for performers/providers in the insurance claims system. It defines spending authority ranges with minimum and maximum amounts that can be authorized by specific performers.\n- The table establishes financial controls by setting authorization boundaries, ensuring that claim payments stay within approved limits for each performer.\n- LIST OF COLUMNS: PERFORMER_ID (unique identifier for performer - links to PERFORMER_ID in CLAIM_LINES), CURRENCY (transaction currency), FROM_AMT (minimum authorization amount), TO_AMT (maximum authorization amount)\n\nCLAIMS:\n- Database: INS_CO, Schema: LOSS_CLAIMS\n- This is the main claims table containing comprehensive information about insurance claims including policy details, loss information, and claim status. It serves as the central hub for claim management with details about when losses occurred, were reported, and processed.\n- The table tracks the complete lifecycle of claims from initial loss occurrence through reporting and processing, providing essential data for claim analysis and management.\n- LIST OF COLUMNS: CLAIM_NO (unique claim identifier), LINE_OF_BUSINESS (business type), CLAIM_STATUS (current claim state), CAUSE_OF_LOSS (loss reason), CLAIMANT_ID (person submitting claim), PERFORMER (service provider - links to PERFORMER_ID in other tables), POLICY_NO (insurance policy identifier), LOSS_DESCRIPTION (damage details), LOSS_STATE (loss location state), LOSS_ZIP_CODE (loss location zip), CREATED_DATE (claim creation date), LOSS_DATE (when loss occurred), REPORTED_DATE (when claim was reported), FNOL_COMPLETION_DATE (first notice of loss completion)\n\nCLAIM_LINES:\n- Database: INS_CO, Schema: LOSS_CLAIMS\n- This table contains individual line items for each claim, breaking down claims into specific components or damages. Each line represents a separate aspect of the overall claim with its own status and performer assignment.\n- The table enables detailed tracking of claim components, allowing for granular management of different types of damages or services within a single claim.\n- LIST OF COLUMNS: CLAIM_NO (links to CLAIM_NO in CLAIMS), LOSS_DESCRIPTION (specific line item damage), CLAIM_STATUS (line item status), CLAIMANT_ID (claim submitter), PERFORMER_ID (assigned service provider - links to AUTHORIZATION), LINE_NO (unique line identifier - links to FINANCIAL_TRANSACTIONS and INVOICES), CREATED_DATE (line creation date), REPORTED_DATE (line reporting date)\n\nFINANCIAL_TRANSACTIONS:\n- Database: INS_CO, Schema: LOSS_CLAIMS\n- This table records all financial activities related to claims including payments and reserves. It tracks the monetary flow for each claim line item with transaction types, amounts, and posting dates.\n- The table provides complete financial audit trail for claims processing, enabling tracking of reserves set aside and actual payments made for claim resolution.\n- LIST OF COLUMNS: FXID (foreign exchange transaction ID), FINANCIAL_TYPE (transaction category like RSV/PAY), CURRENCY (transaction currency), LINE_NO (links to CLAIM_LINES and INVOICES), FIN_TX_POST_DT (transaction posting date), FIN_TX_AMT (transaction amount)\n\nINVOICES:\n- Database: INS_CO, Schema: LOSS_CLAIMS\n- This table contains invoice information from vendors providing services or materials for claim repairs. It includes detailed line items with descriptions, amounts, and vendor information for tracking claim-related expenses.\n- The table facilitates vendor payment processing and expense tracking by maintaining detailed records of all invoiced items and their associated costs.\n- LIST OF COLUMNS: INV_ID (invoice identifier), INV_LINE_NBR (invoice line number), LINE_NO (links to CLAIM_LINES and FINANCIAL_TRANSACTIONS), DESCRIPTION (item/service description), CURRENCY (invoice currency), VENDOR (supplier name), INVOICE_DATE (invoice issue date), INVOICE_AMOUNT (invoice total)\n\nGUIDELINES_CHUNK_TABLE:\n- Database: INS_CO, Schema: LOSS_CLAIMS\n- This table stores processed guidelines documents in chunks for easy retrieval and reference. It contains insurance claims processing guidelines broken into manageable text segments.\n- The table supports compliance and procedural guidance by providing searchable access to regulatory and company guidelines for claims handling.\n- LIST OF COLUMNS: FILENAME (guideline document name), FILE_URL (document storage location), CHUNK (guideline text segment), LANGUAGE (content language)\n\nNOTES_CHUNK_TABLE:\n- Database: INS_CO, Schema: LOSS_CLAIMS\n- This table contains claim-specific notes and documentation broken into text chunks for analysis and retrieval. It stores detailed notes about claim progress, decisions, and observations.\n- The table provides comprehensive claim documentation history, enabling detailed tracking of claim handling decisions and progress updates.\n- LIST OF COLUMNS: FILENAME (notes document name), FILE_URL (document storage location), CHUNK (notes text segment), LANGUAGE (content language), CLAIM_NO (links to CLAIMS table)\n\nPARSED_INVOICES:\n- Database: INS_CO, Schema: LOSS_CLAIMS\n- This table contains extracted content from invoice images or documents that have been processed through parsing technology. It stores the raw extracted text from invoice files for further processing.\n- The table enables automated invoice processing by capturing and storing parsed invoice content for integration with the structured invoice data.\n- LIST OF COLUMNS: FILENAME (source invoice file), EXTRACTED_CONTENT (parsed invoice text), PARSE_DATE (when parsing occurred)\n\nREASONING:\nThis semantic model represents a comprehensive insurance claims management system that tracks the complete lifecycle of property insurance claims from initial loss through financial settlement. The model centers around claims and their associated line items, with strong relationships connecting authorization limits, financial transactions, invoices, and supporting documentation. The system enforces financial controls through performer authorization limits while maintaining detailed audit trails of all financial activities and supporting documentation.\n\nDESCRIPTION:\nThe CA_INS_CO semantic model is a comprehensive insurance claims management system from the INS_CO database's LOSS_CLAIMS schema that tracks property insurance claims from loss occurrence through financial settlement. The model centers on the CLAIMS table which connects to CLAIM_LINES for detailed damage breakdowns, with each line item linked to FINANCIAL_TRANSACTIONS for payment tracking and INVOICES for vendor billing. The system includes financial controls through the AUTHORIZATION table that sets spending limits for performers, while NOTES_CHUNK_TABLE and GUIDELINES_CHUNK_TABLE provide supporting documentation and regulatory guidance. The PARSED_INVOICES table enables automated processing of invoice documents, creating a complete end-to-end claims processing workflow with full audit trails and compliance tracking."
+          "description": "AUTHORIZATION:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table manages authorization limits for performers/providers in the insurance claims system. It defines spending authority ranges with minimum and maximum amounts that can be authorized by specific performers.\n- The table establishes financial controls by setting authorization boundaries, ensuring that claim payments stay within approved limits for each performer.\n- LIST OF COLUMNS: PERFORMER_ID (unique identifier for performer - links to PERFORMER_ID in CLAIM_LINES), CURRENCY (transaction currency), FROM_AMT (minimum authorization amount), TO_AMT (maximum authorization amount)\n\nCLAIMS:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This is the main claims table containing comprehensive information about insurance claims including policy details, loss information, and claim status. It serves as the central hub for claim management with details about when losses occurred, were reported, and processed.\n- The table tracks the complete lifecycle of claims from initial loss occurrence through reporting and processing, providing essential data for claim analysis and management.\n- LIST OF COLUMNS: CLAIM_NO (unique claim identifier), LINE_OF_BUSINESS (business type), CLAIM_STATUS (current claim state), CAUSE_OF_LOSS (loss reason), CLAIMANT_ID (person submitting claim), PERFORMER (service provider - links to PERFORMER_ID in other tables), POLICY_NO (insurance policy identifier), LOSS_DESCRIPTION (damage details), LOSS_STATE (loss location state), LOSS_ZIP_CODE (loss location zip), CREATED_DATE (claim creation date), LOSS_DATE (when loss occurred), REPORTED_DATE (when claim was reported), FNOL_COMPLETION_DATE (first notice of loss completion)\n\nCLAIM_LINES:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table contains individual line items for each claim, breaking down claims into specific components or damages. Each line represents a separate aspect of the overall claim with its own status and performer assignment.\n- The table enables detailed tracking of claim components, allowing for granular management of different types of damages or services within a single claim.\n- LIST OF COLUMNS: CLAIM_NO (links to CLAIM_NO in CLAIMS), LOSS_DESCRIPTION (specific line item damage), CLAIM_STATUS (line item status), CLAIMANT_ID (claim submitter), PERFORMER_ID (assigned service provider - links to AUTHORIZATION), LINE_NO (unique line identifier - links to FINANCIAL_TRANSACTIONS and INVOICES), CREATED_DATE (line creation date), REPORTED_DATE (line reporting date)\n\nFINANCIAL_TRANSACTIONS:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table records all financial activities related to claims including payments and reserves. It tracks the monetary flow for each claim line item with transaction types, amounts, and posting dates.\n- The table provides complete financial audit trail for claims processing, enabling tracking of reserves set aside and actual payments made for claim resolution.\n- LIST OF COLUMNS: FXID (foreign exchange transaction ID), FINANCIAL_TYPE (transaction category like RSV/PAY), CURRENCY (transaction currency), LINE_NO (links to CLAIM_LINES and INVOICES), FIN_TX_POST_DT (transaction posting date), FIN_TX_AMT (transaction amount)\n\nINVOICES:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table contains invoice information from vendors providing services or materials for claim repairs. It includes detailed line items with descriptions, amounts, and vendor information for tracking claim-related expenses.\n- The table facilitates vendor payment processing and expense tracking by maintaining detailed records of all invoiced items and their associated costs.\n- LIST OF COLUMNS: INV_ID (invoice identifier), INV_LINE_NBR (invoice line number), LINE_NO (links to CLAIM_LINES and FINANCIAL_TRANSACTIONS), DESCRIPTION (item/service description), CURRENCY (invoice currency), VENDOR (supplier name), INVOICE_DATE (invoice issue date), INVOICE_AMOUNT (invoice total)\n\nGUIDELINES_CHUNK_TABLE:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table stores processed guidelines documents in chunks for easy retrieval and reference. It contains insurance claims processing guidelines broken into manageable text segments.\n- The table supports compliance and procedural guidance by providing searchable access to regulatory and company guidelines for claims handling.\n- LIST OF COLUMNS: FILENAME (guideline document name), FILE_URL (document storage location), CHUNK (guideline text segment), LANGUAGE (content language)\n\nNOTES_CHUNK_TABLE:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table contains claim-specific notes and documentation broken into text chunks for analysis and retrieval. It stores detailed notes about claim progress, decisions, and observations.\n- The table provides comprehensive claim documentation history, enabling detailed tracking of claim handling decisions and progress updates.\n- LIST OF COLUMNS: FILENAME (notes document name), FILE_URL (document storage location), CHUNK (notes text segment), LANGUAGE (content language), CLAIM_NO (links to CLAIMS table)\n\nPARSED_INVOICES:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table contains extracted content from invoice images or documents that have been processed through parsing technology. It stores the raw extracted text from invoice files for further processing.\n- The table enables automated invoice processing by capturing and storing parsed invoice content for integration with the structured invoice data.\n- LIST OF COLUMNS: FILENAME (source invoice file), EXTRACTED_CONTENT (parsed invoice text), PARSE_DATE (when parsing occurred)\n\nREASONING:\nThis semantic model represents a comprehensive insurance claims management system that tracks the complete lifecycle of property insurance claims from initial loss through financial settlement. The model centers around claims and their associated line items, with strong relationships connecting authorization limits, financial transactions, invoices, and supporting documentation. The system enforces financial controls through performer authorization limits while maintaining detailed audit trails of all financial activities and supporting documentation.\n\nDESCRIPTION:\nThe CA_INSURANCE_CLAIMS_DEMO semantic model is a comprehensive insurance claims management system from the INSURANCE_CLAIMS_DEMO database's LOSS_CLAIMS schema that tracks property insurance claims from loss occurrence through financial settlement. The model centers on the CLAIMS table which connects to CLAIM_LINES for detailed damage breakdowns, with each line item linked to FINANCIAL_TRANSACTIONS for payment tracking and INVOICES for vendor billing. The system includes financial controls through the AUTHORIZATION table that sets spending limits for performers, while NOTES_CHUNK_TABLE and GUIDELINES_CHUNK_TABLE provide supporting documentation and regulatory guidance. The PARSED_INVOICES table enables automated processing of invoice documents, creating a complete end-to-end claims processing workflow with full audit trails and compliance tracking."
         }
       },
       {
@@ -398,7 +398,7 @@ $$
         "tool_spec": {
           "type": "generic",
           "name": "Parse_document",
-          "description": "PROCEDURE/FUNCTION DETAILS:\n- Type: Custom Function\n- Language: SQL\n- Signature: (FILE_NAME VARCHAR)\n- Returns: VARIANT\n- Execution: Caller context with standard null handling\n- Volatility: Stable (depends on file content)\n- Primary Function: Document parsing and content extraction\n- Target: Files stored in the loss_evidence stage within the ins_co.loss_claims schema\n- Error Handling: Relies on Snowflake's AI_PARSE_DOCUMENT built-in error handling\n\nDESCRIPTION:\nThis custom SQL function serves as a specialized document processing tool designed specifically for insurance loss claims operations, leveraging Snowflake's AI-powered document parsing capabilities to extract structured data from evidence files. The function takes a file name as input and automatically retrieves the corresponding document from the designated loss_evidence file stage, then processes it using advanced layout analysis with page-splitting enabled to maintain document structure integrity. This function is particularly valuable for insurance companies and claims processors who need to systematically extract information from various types of loss evidence documents such as police reports, medical records, repair estimates, or photographic evidence submitted as part of insurance claims. The function returns data in VARIANT format, providing flexibility to handle diverse document types and extracted content structures, making it ideal for downstream processing workflows that require structured data analysis. Users should ensure they have appropriate access permissions to both the file stage and the AI_PARSE_DOCUMENT functionality, and should be prepared to handle potential parsing errors for corrupted or unsupported file formats.\n\nUSAGE SCENARIOS:\n- Claims Processing Automation: Automatically extract key information from newly submitted claim evidence documents to populate claim databases and accelerate adjuster review processes\n- Bulk Document Analysis: Process large volumes of historical claim documents to extract patterns, identify fraud indicators, or perform compliance audits across the insurance portfolio\n- Integration Testing: Validate document parsing workflows in development environments by testing various document formats and structures before deploying to production claim processing systems",
+          "description": "PROCEDURE/FUNCTION DETAILS:\n- Type: Custom Function\n- Language: SQL\n- Signature: (FILE_NAME VARCHAR)\n- Returns: VARIANT\n- Execution: Caller context with standard null handling\n- Volatility: Stable (depends on file content)\n- Primary Function: Document parsing and content extraction\n- Target: Files stored in the loss_evidence stage within the INSURANCE_CLAIMS_DEMO.loss_claims schema\n- Error Handling: Relies on Snowflake's AI_PARSE_DOCUMENT built-in error handling\n\nDESCRIPTION:\nThis custom SQL function serves as a specialized document processing tool designed specifically for insurance loss claims operations, leveraging Snowflake's AI-powered document parsing capabilities to extract structured data from evidence files. The function takes a file name as input and automatically retrieves the corresponding document from the designated loss_evidence file stage, then processes it using advanced layout analysis with page-splitting enabled to maintain document structure integrity. This function is particularly valuable for insurance companies and claims processors who need to systematically extract information from various types of loss evidence documents such as police reports, medical records, repair estimates, or photographic evidence submitted as part of insurance claims. The function returns data in VARIANT format, providing flexibility to handle diverse document types and extracted content structures, making it ideal for downstream processing workflows that require structured data analysis. Users should ensure they have appropriate access permissions to both the file stage and the AI_PARSE_DOCUMENT functionality, and should be prepared to handle potential parsing errors for corrupted or unsupported file formats.\n\nUSAGE SCENARIOS:\n- Claims Processing Automation: Automatically extract key information from newly submitted claim evidence documents to populate claim databases and accelerate adjuster review processes\n- Bulk Document Analysis: Process large volumes of historical claim documents to extract patterns, identify fraud indicators, or perform compliance audits across the insurance portfolio\n- Integration Testing: Validate document parsing workflows in development environments by testing various document formats and structures before deploying to production claim processing systems",
           "input_schema": {
             "type": "object",
             "properties": {
@@ -424,7 +424,7 @@ $$
                 "type": "string"
               },
               "stage_name": {
-                "description": "default the stage to INS_CO.LOSS_CLAIMS.LOSS_EVIDENCE",
+                "description": "default the stage to INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.LOSS_EVIDENCE",
                 "type": "string"
               }
             },
@@ -447,7 +447,7 @@ $$
                 "type": "string"
               },
               "stage_name": {
-                "description": "default the stage to INS_CO.LOSS_CLAIMS.LOSS_EVIDENCE",
+                "description": "default the stage to INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.LOSS_EVIDENCE",
                 "type": "string"
               }
             },
@@ -461,7 +461,7 @@ $$
     ],
     "tool_resources": {
       "CA_INS": {
-        "semantic_view": "INS_CO.LOSS_CLAIMS.CA_INS_CO"
+        "semantic_view": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CA_INSURANCE_CLAIMS_DEMO"
       },
       "CLASSIFY_FUNCTION": {
         "execution_environment": {
@@ -469,13 +469,13 @@ $$
           "type": "warehouse",
           "warehouse": "CLAIMS_AGENT_WH"
         },
-        "identifier": "INS_CO_DB.ANALYTICS.CLASSIFY_DOCUMENT",
+        "identifier": "INSURANCE_CLAIMS_DEMO_DB.ANALYTICS.CLASSIFY_DOCUMENT",
         "name": "CLASSIFY_DOCUMENT(VARCHAR, DEFAULT VARCHAR)",
         "type": "function"
       },
       "Guidelines": {
         "max_results": 4,
-        "name": "INS_CO.LOSS_CLAIMS.INS_CO_GUIDELINES",
+        "name": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_GUIDELINES",
         "title_column": "filename",
         "id_column": "file_url"
       },
@@ -485,7 +485,7 @@ $$
           "type": "warehouse",
           "warehouse": "CLAIMS_AGENT_WH"
         },
-        "identifier": "INS_CO.LOSS_CLAIMS.GET_IMAGE_SUMMARY",
+        "identifier": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.GET_IMAGE_SUMMARY",
         "name": "GET_IMAGE_SUMMARY(VARCHAR, VARCHAR)",
         "type": "function"
       },
@@ -495,7 +495,7 @@ $$
           "type": "warehouse",
           "warehouse": "CLAIMS_AGENT_WH"
         },
-        "identifier": "INS_CO.LOSS_CLAIMS.PARSE_DOCUMENT_FROM_STAGE",
+        "identifier": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.PARSE_DOCUMENT_FROM_STAGE",
         "name": "PARSE_DOCUMENT_FROM_STAGE(VARCHAR)",
         "type": "function"
       },
@@ -505,13 +505,13 @@ $$
           "type": "warehouse",
           "warehouse": "CLAIMS_AGENT_WH"
         },
-        "identifier": "INS_CO.LOSS_CLAIMS.TRANSCRIBE_AUDIO_SIMPLE",
+        "identifier": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.TRANSCRIBE_AUDIO_SIMPLE",
         "name": "TRANSCRIBE_AUDIO_SIMPLE(VARCHAR, DEFAULT VARCHAR)",
         "type": "procedure"
       },
       "claim_notes": {
         "max_results": 4,
-        "name": "INS_CO.LOSS_CLAIMS.INS_CO_CLAIM_NOTES",
+        "name": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_CLAIM_NOTES",
         "title_column": "filename",
         "id_column": "file_url"
       }
@@ -522,20 +522,20 @@ $$;
 ----- Automated URL Refresh System -----
 -- Presigned URLs expire after 24 hours, so refresh every 12 hours to ensure links remain valid
 
-CREATE OR REPLACE TASK INS_CO.LOSS_CLAIMS.REFRESH_PRESIGNED_URLS_TASK
+CREATE OR REPLACE TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_PRESIGNED_URLS_TASK
   WAREHOUSE = CLAIMS_AGENT_WH
   SCHEDULE = 'USING CRON 0 1,13 * * * America/New_York'  -- Runs twice daily at 1:00 AM and 1:00 PM EST
   COMMENT = 'Refreshes presigned URLs every 12 hours to keep download links valid'
 AS
 BEGIN
   -- Update Notes Chunk Table URLs
-  UPDATE INS_CO.LOSS_CLAIMS.NOTES_CHUNK_TABLE
-  SET file_url = GET_PRESIGNED_URL('@INS_CO.loss_claims.loss_evidence', FILENAME, 86400);
+  UPDATE INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.NOTES_CHUNK_TABLE
+  SET file_url = GET_PRESIGNED_URL('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', FILENAME, 86400);
   
   -- Update Guidelines Chunk Table URLs
-  UPDATE INS_CO.LOSS_CLAIMS.GUIDELINES_CHUNK_TABLE
-  SET file_url = GET_PRESIGNED_URL('@INS_CO.loss_claims.loss_evidence', FILENAME, 86400);
+  UPDATE INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.GUIDELINES_CHUNK_TABLE
+  SET file_url = GET_PRESIGNED_URL('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', FILENAME, 86400);
 END;
 
 -- Activate the task to start automatic URL refresh
-ALTER TASK INS_CO.LOSS_CLAIMS.REFRESH_PRESIGNED_URLS_TASK RESUME;
+ALTER TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_PRESIGNED_URLS_TASK RESUME;
