@@ -1,0 +1,985 @@
+name: loss_claims
+tables:
+  - name: AUTHORIZATION
+    base_table:
+      database: INSURANCE_CLAIMS_DEMO
+      schema: LOSS_CLAIMS
+      table: AUTHORIZATION
+    dimensions:
+      - name: PERFORMER_ID
+        expr: PERFORMER_ID
+        data_type: VARCHAR(50)
+        sample_values:
+          - '171'
+          - '181'
+          - '191'
+        description: Unique identifier for the individual or entity responsible for performing a specific task or action.
+        synonyms:
+          - performer_key
+          - provider_id
+          - practitioner_id
+          - user_id
+          - account_id
+          - actor_id
+          - operator_id
+          - executor_id
+      - name: CURRENCY
+        expr: CURRENCY
+        data_type: VARCHAR(10)
+        sample_values:
+          - USD
+        description: The currency in which the transaction or authorization was processed.
+        synonyms:
+          - money_unit
+          - denomination
+          - exchange_unit
+          - monetary_unit
+          - tender_type
+          - coin_type
+          - bill_type
+          - legal_tender
+    facts:
+      - name: FROM_AMT
+        expr: FROM_AMT
+        data_type: NUMBER(18,2)
+        sample_values:
+          - '0.00'
+        description: The amount of funds being transferred or allocated from one account or source to another.
+        synonyms:
+          - starting_amount
+          - initial_amount
+          - minimum_amount
+          - lower_bound_amount
+          - beginning_balance
+      - name: TO_AMT
+        expr: TO_AMT
+        data_type: NUMBER(18,2)
+        sample_values:
+          - '5000.00'
+          - '3000.00'
+          - '2500.00'
+        description: The total amount of the authorization.
+        synonyms:
+          - upper_limit
+          - maximum_amount
+          - end_amount
+          - to_value
+          - max_value
+          - end_value
+          - upper_bound
+          - ceiling_amount
+    primary_key:
+      columns:
+        - PERFORMER_ID
+  - name: CLAIMS
+    base_table:
+      database: INSURANCE_CLAIMS_DEMO
+      schema: LOSS_CLAIMS
+      table: CLAIMS
+    dimensions:
+      - name: CLAIM_NO
+        expr: CLAIM_NO
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '1899'
+        description: Unique identifier for a claim, used to distinguish one claim from another.
+        synonyms:
+          - claim_number
+          - claim_id
+          - claim_reference
+          - policy_claim_number
+          - claim_identifier
+      - name: LINE_OF_BUSINESS
+        expr: LINE_OF_BUSINESS
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Property
+        description: The type of business or industry that the claim is related to, such as property, casualty, or liability.
+        synonyms:
+          - business_line
+          - industry
+          - market_segment
+          - product_line
+          - service_category
+          - business_segment
+          - product_category
+          - service_line
+      - name: CLAIM_STATUS
+        expr: CLAIM_STATUS
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Open
+        description: The current status of the claim, indicating whether it is still being processed (Open) or has been resolved.
+        synonyms:
+          - claim_state
+          - claim_outcome
+          - claim_resolution
+          - claim_disposition
+          - claim_result
+          - claim_decision
+          - claim_verdict
+      - name: CAUSE_OF_LOSS
+        expr: CAUSE_OF_LOSS
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Hurricane
+        description: The reason or event that triggered the insurance claim, such as a natural disaster or accident.
+        synonyms:
+          - reason_for_claim
+          - loss_cause
+          - claim_reason
+          - loss_reason
+          - damage_cause
+          - incident_cause
+          - accident_cause
+          - claim_cause
+          - loss_origin
+      - name: CLAIMANT_ID
+        expr: CLAIMANT_ID
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '19'
+        description: Unique identifier for the individual or entity submitting the claim.
+        synonyms:
+          - claimant_number
+          - policyholder_id
+          - insured_id
+          - claimant_identifier
+          - policy_owner_id
+          - insured_party_id
+      - name: PERFORMER
+        expr: PERFORMER
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '18'
+        description: The individual or entity that performed the medical service or procedure associated with the claim.
+        synonyms:
+          - provider
+          - practitioner
+          - caregiver
+          - service_provider
+          - healthcare_provider
+          - medical_professional
+          - doctor
+          - nurse
+          - therapist
+      - name: POLICY_NO
+        expr: POLICY_NO
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '888'
+        description: Unique identifier for the insurance policy associated with the claim.
+        synonyms:
+          - policy_number
+          - policy_id
+          - policy_identifier
+          - policy_code
+          - contract_number
+          - contract_id
+      - name: LOSS_DESCRIPTION
+        expr: LOSS_DESCRIPTION
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Damaged dwelling and fence after the tree fell
+        description: A brief description of the loss or damage that occurred, as reported by the claimant.
+        synonyms:
+          - loss_summary
+          - loss_details
+          - claim_description
+          - incident_description
+          - damage_description
+          - loss_narrative
+          - claim_summary
+          - incident_summary
+      - name: LOSS_STATE
+        expr: LOSS_STATE
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - NJ
+        description: The state in which the loss occurred.
+        synonyms:
+          - state_of_loss
+          - loss_location
+          - location_of_loss
+          - loss_state_province
+          - loss_region
+          - state_where_loss_occurred
+          - loss_territory
+      - name: LOSS_ZIP_CODE
+        expr: LOSS_ZIP_CODE
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '8820'
+        description: The five-digit zip code where the loss occurred.
+        synonyms:
+          - loss_postal_code
+          - loss_zip
+          - loss_postcode
+          - incident_zip
+          - loss_location_zip
+          - claim_zip_code
+    time_dimensions:
+      - name: CREATED_DATE
+        expr: CREATED_DATE
+        data_type: DATE
+        sample_values:
+          - '2025-01-06'
+        description: Date when the claim was created.
+        synonyms:
+          - created_timestamp
+          - creation_date
+          - date_created
+          - entry_date
+          - insertion_date
+          - record_date
+          - registration_date
+          - submission_date
+      - name: LOSS_DATE
+        expr: LOSS_DATE
+        data_type: DATE
+        sample_values:
+          - '2025-01-06'
+        description: Date on which the loss or damage occurred.
+        synonyms:
+          - date_of_loss
+          - loss_occurrence_date
+          - incident_date
+          - accident_date
+          - date_of_incident
+          - loss_event_date
+      - name: REPORTED_DATE
+        expr: REPORTED_DATE
+        data_type: DATE
+        sample_values:
+          - '2025-01-06'
+        description: The date on which the claim was reported to the organization.
+        synonyms:
+          - reported_on
+          - date_reported
+          - incident_reported_date
+          - claim_reported_date
+          - notification_date
+          - filing_date
+          - submission_date
+          - logged_date
+      - name: FNOL_COMPLETION_DATE
+        expr: FNOL_COMPLETION_DATE
+        data_type: DATE
+        sample_values:
+          - '2025-01-06'
+        description: Date when the First Notice of Loss (FNOL) was completed, marking the initial report of a claim.
+        synonyms:
+          - first_notice_of_loss_completion_date
+          - first_report_of_loss_date
+          - loss_notification_completion_date
+          - initial_loss_report_date
+          - notice_of_loss_completion_date
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - CLAIM_NO
+  - name: CLAIM_LINES
+    base_table:
+      database: INSURANCE_CLAIMS_DEMO
+      schema: LOSS_CLAIMS
+      table: CLAIM_LINES
+    dimensions:
+      - name: CLAIM_NO
+        expr: CLAIM_NO
+        description: Unique identifier for a claim, used to track and manage individual claims submitted by patients or healthcare providers for reimbursement or insurance coverage.
+        synonyms:
+          - claim_number
+          - claim_id
+          - claim_reference
+          - policy_number
+          - claim_identifier
+          - claim_code
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '1899'
+      - name: LOSS_DESCRIPTION
+        expr: LOSS_DESCRIPTION
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Damaged Dwelling
+          - Damaged Lawn
+          - Damaged Fence
+        description: A brief description of the damage or loss incurred by the policyholder, as reported on the claim.
+        synonyms:
+          - loss_reason
+          - claim_cause
+          - damage_description
+          - incident_summary
+          - loss_summary
+          - claim_description
+          - incident_description
+      - name: CLAIM_STATUS
+        expr: CLAIM_STATUS
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Open
+        description: The current status of a claim, indicating whether it is still being processed (Open) or has been resolved.
+        synonyms:
+          - claim_state
+          - claim_phase
+          - claim_progress
+          - claim_outcome
+          - claim_resolution
+          - claim_disposition
+          - claim_result
+      - name: CLAIMANT_ID
+        expr: CLAIMANT_ID
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '19'
+        description: Unique identifier for the individual or entity submitting the claim.
+        synonyms:
+          - claimer_id
+          - policy_holder_id
+          - insured_id
+          - claimant_number
+          - claimant_identifier
+          - policy_owner_id
+      - name: PERFORMER_ID
+        expr: PERFORMER_ID
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '171'
+          - '181'
+          - '191'
+        description: The unique identifier of the healthcare provider who performed the medical service or procedure associated with the claim line.
+        synonyms:
+          - provider_id
+          - practitioner_id
+          - caregiver_id
+          - service_provider_id
+          - healthcare_provider_id
+          - medical_professional_id
+      - name: LINE_NO
+        expr: LINE_NO
+        data_type: NUMBER(38,0)
+        sample_values:
+          - '16'
+          - '17'
+          - '18'
+        description: Unique identifier for each line item within a claim.
+        synonyms:
+          - line_number
+          - claim_line_number
+          - sequence_number
+          - row_number
+          - record_number
+    time_dimensions:
+      - name: CREATED_DATE
+        expr: CREATED_DATE
+        data_type: DATE
+        sample_values:
+          - '2025-01-06'
+        description: Date when the claim line was created.
+        synonyms:
+          - creation_date
+          - entry_date
+          - record_date
+          - registration_date
+          - date_created
+          - date_entered
+          - date_recorded
+      - name: REPORTED_DATE
+        expr: REPORTED_DATE
+        data_type: DATE
+        sample_values:
+          - '2025-01-06'
+        description: The date on which the claim was reported to the insurance company.
+        synonyms:
+          - reported_on
+          - filing_date
+          - submission_date
+          - logged_date
+          - date_reported
+          - incident_date
+          - occurrence_date
+          - event_date
+    facts: []
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - LINE_NO
+  - name: FINANCIAL_TRANSACTIONS
+    base_table:
+      database: INSURANCE_CLAIMS_DEMO
+      schema: LOSS_CLAIMS
+      table: FINANCIAL_TRANSACTIONS
+    dimensions:
+      - name: FXID
+        expr: FXID
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '21'
+          - '22'
+          - '23'
+        description: Unique identifier for a foreign exchange transaction.
+        synonyms:
+          - foreign_exchange_id
+          - exchange_id
+          - transaction_id
+          - financial_exchange_identifier
+          - exchange_transaction_key
+      - name: FINANCIAL_TYPE
+        expr: FINANCIAL_TYPE
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - RSV
+          - PAY
+        description: The type of financial transaction, either a Revenue Share Voucher (RSV) or a payment (PAY).
+        synonyms:
+          - transaction_type
+          - financial_category
+          - payment_method
+          - account_type
+          - transaction_classification
+          - financial_classification
+      - name: CURRENCY
+        expr: CURRENCY
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - USD
+        description: The currency in which the financial transaction was made.
+        synonyms:
+          - money_unit
+          - denomination
+          - exchange_unit
+          - monetary_unit
+          - tender_type
+          - coin_type
+          - legal_tender
+          - medium_of_exchange
+      - name: LINE_NO
+        expr: LINE_NO
+        description: A unique identifier for each line item within a financial transaction.
+        synonyms:
+          - line_number
+          - row_number
+          - transaction_line
+          - entry_number
+          - record_number
+          - sequence_number
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '16'
+          - '17'
+          - '18'
+    time_dimensions:
+      - name: FIN_TX_POST_DT
+        expr: FIN_TX_POST_DT
+        data_type: DATE
+        sample_values:
+          - '2025-02-15'
+          - '2025-06-15'
+          - '2025-03-06'
+        description: Date the financial transaction was posted.
+        synonyms:
+          - posting_date
+          - transaction_posting_date
+          - financial_transaction_date
+          - transaction_date
+          - posting_timestamp
+          - transaction_posted_date
+    facts:
+      - name: FIN_TX_AMT
+        expr: FIN_TX_AMT
+        data_type: NUMBER(18,2)
+        sample_values:
+          - '4000.00'
+          - '3000.00'
+          - '3500.00'
+        description: The amount of the financial transaction.
+        synonyms:
+          - transaction_amount
+          - financial_transaction_value
+          - amount_transacted
+          - transaction_value
+          - financial_amount
+          - payment_amount
+          - transaction_cost
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - LINE_NO
+  - name: INVOICES
+    base_table:
+      database: INSURANCE_CLAIMS_DEMO
+      schema: LOSS_CLAIMS
+      table: INVOICES
+    dimensions:
+      - name: INV_ID
+        expr: INV_ID
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '5'
+          - '6'
+          - '7'
+        description: Unique identifier for each invoice.
+        synonyms:
+          - invoice_number
+          - invoice_id
+          - invoice_identifier
+          - invoice_code
+          - invoice_reference
+      - name: INV_LINE_NBR
+        expr: INV_LINE_NBR
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '1'
+          - '2'
+          - '3'
+        description: Unique identifier for each line item on an invoice.
+        synonyms:
+          - invoice_line_number
+          - line_item_number
+          - invoice_item_number
+          - line_nbr
+          - invoice_line_id
+          - item_number
+      - name: LINE_NO
+        expr: LINE_NO
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '16'
+          - '17'
+          - '18'
+        description: A unique identifier for each line item on an invoice, representing the sequential order in which the items appear on the invoice.
+        synonyms:
+          - line_number
+          - line_item_number
+          - sequence_number
+          - row_number
+          - item_number
+          - entry_number
+      - name: DESCRIPTION
+        expr: DESCRIPTION
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - Wooden Logs
+          - Hardware
+          - Labor
+        description: A categorization of the type of goods or services billed to a customer, such as materials, equipment, or work performed.
+        synonyms:
+          - item_description
+          - item_info
+          - product_details
+          - item_text
+          - product_info
+          - item_note
+          - product_note
+      - name: CURRENCY
+        expr: CURRENCY
+        data_type: VARCHAR(10)
+        sample_values:
+          - USD
+        description: The currency in which the invoice was issued.
+        synonyms:
+          - money_unit
+          - denomination
+          - exchange_rate_unit
+          - monetary_unit
+          - tender_type
+          - coin_type
+          - legal_tender
+          - monetary_denomination
+      - name: VENDOR
+        expr: VENDOR
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - ABC
+          - LMN
+          - XYZ
+        description: The name of the vendor or supplier that the invoice is associated with.
+        synonyms:
+          - supplier
+          - provider
+          - seller
+          - merchant
+          - trader
+          - dealer
+          - manufacturer
+          - distributor
+          - contractor
+    time_dimensions:
+      - name: INVOICE_DATE
+        expr: INVOICE_DATE
+        data_type: DATE
+        sample_values:
+          - '2025-05-15'
+          - '2025-04-20'
+          - '2025-03-18'
+        description: Date the invoice was issued.
+        synonyms:
+          - bill_date
+          - invoice_creation_date
+          - payment_due_date
+          - document_date
+          - date_invoiced
+          - billing_date
+    facts:
+      - name: INVOICE_AMOUNT
+        expr: INVOICE_AMOUNT
+        data_type: NUMBER(18,2)
+        sample_values:
+          - '2500.00'
+          - '1000.00'
+          - '500.00'
+        description: The total amount due on an invoice, representing the sum of all charges, taxes, and fees associated with a specific transaction or order.
+        synonyms:
+          - invoice_total
+          - total_invoice_value
+          - invoice_cost
+          - billed_amount
+          - invoice_price
+          - total_due
+          - amount_billed
+          - invoice_value
+  - name: GUIDELINES_CHUNK_TABLE
+    base_table:
+      database: INSURANCE_CLAIMS_DEMO
+      schema: LOSS_CLAIMS
+      table: GUIDELINES_CHUNK_TABLE
+    dimensions:
+      - name: FILENAME
+        expr: FILENAME
+        data_type: VARCHAR(255)
+        sample_values:
+          - Guidelines.pdf
+        description: The name of the file that contains the guidelines.
+        synonyms:
+          - file_name
+          - document_name
+          - file_title
+          - document_title
+          - file_identifier
+          - file_label
+      - name: FILE_URL
+        expr: FILE_URL
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - https://bwb93814.snowflakecomputing.com/api/files/01be7ab8-0106-44a2-0004-62870343142e/1234231872503814/%2bVF5OybT2XtsSH9CqUsHvDcx3SVhP8QD3Pg8TLQXkXJerhK8%2b4plTce17KzHmDNGAfKdUdoByxBRRnHIxF8%2fyt51gUh6fB1pqOp81mHaCUL30rWDooG2sytHGws%2fzx1poH5iYF7qFUGs5rHYrEJ3DYyGdt6ul%2bO84wQNFwgM2RQbtzBU%2bMsaVZxRxz1hjVRzuJ6hgBj0hb%2bCKWwT%2fOl1VYkBcvFAePwoLhCNlcdD26Zb3fBElBFYgoMzxHO89VYvajTvPv5ey8lIszJrkaJz3MFp
+        description: The URL of the file stored in the cloud storage, used to access and retrieve the file contents.
+        synonyms:
+          - file_link
+          - url
+          - file_location
+          - download_url
+          - file_path
+          - hyperlink
+          - web_address
+      - name: CHUNK
+        expr: CHUNK
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - |-
+            Guidelines.pdf: Guidelines:
+            • Insurers must acknowledge receipt of a claim notification within 10 working days, unless
+            payment is made within that timeframe.
+          - |-
+            Guidelines.pdf: • They must also provide claimants with necessary forms, instructions, and assistance to
+            comply with policy conditions, also within 10 working days.
+          - |-
+            Guidelines.pdf: • Insurers must begin investigating claims (other than auto physical damage) within 10
+            working days of receiving notification.
+        description: This column stores the guidelines for insurance claims processing, including the timeframe for acknowledging receipt of claims, providing necessary forms and assistance, and initiating investigations.
+        synonyms:
+          - block
+          - section
+          - part
+          - segment
+          - piece
+          - portion
+          - slice
+          - fragment
+      - name: LANGUAGE
+        expr: LANGUAGE
+        data_type: VARCHAR(7)
+        sample_values:
+          - English
+        description: The language in which the content is written.
+        synonyms:
+          - tongue
+          - dialect
+          - speech
+          - lingo
+          - vernacular
+          - idiom
+  - name: NOTES_CHUNK_TABLE
+    base_table:
+      database: INSURANCE_CLAIMS_DEMO
+      schema: LOSS_CLAIMS
+      table: NOTES_CHUNK_TABLE
+    dimensions:
+      - name: FILENAME
+        expr: FILENAME
+        data_type: VARCHAR(255)
+        sample_values:
+          - 1899_Claim_Notes.pdf
+        description: The name of the file containing the claim notes.
+        synonyms:
+          - file_name
+          - document_name
+          - file_title
+          - document_title
+          - file_identifier
+          - file_label
+      - name: FILE_URL
+        expr: FILE_URL
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - https://bwb93814.snowflakecomputing.com/api/files/01be7ab8-0106-44a2-0004-62870343142a/1234231872503814/xxvJOt75li38Rrdm%2fCOLdAbQXhS6tdu9EDBVXcuvmv1d8HPCD9eFKLW32Kie86Ag1y%2b96yF8lIhnN4ZoW85hjfR4Wt4n96Rboj7RL7edtOJ3DNkwbdxmdG49YvyHxzzuEX04jeKSOdGbWhvAKb7iE3hgRAT%2fGS0j3Xquf96K2BSoBsGIfwNT4T9wlfKlLstrngtTivvFDWEVjfchVwrv6MSu46lV40diiCBqnlrjCjNr3l5iKycZABdS%2bu5mmwItfbdwGu49PqhbEPmgGYgjbyUYLhGhmGTA
+        description: The URL of the file associated with the note.
+        synonyms:
+          - file_link
+          - url
+          - file_location
+          - download_url
+          - file_path
+          - hyperlink
+          - web_address
+      - name: CHUNK
+        expr: CHUNK
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - |-
+            1899_Claim_Notes.pdf: Claim Notes:
+            • 02/08/2025: The lawn on the property was severely damaged and after inspection the
+            likely costs would be in the range of $2000. As such amount of $2000 will be reserved to
+          - |-
+            1899_Claim_Notes.pdf: remediate the lawn damages.
+            • 02/10/2025: Estimated price for the fence damaged by the fallen tree is likely to be
+            around $3000. As such amount of $3000 will be reserved to remediate the fence.
+          - |-
+            1899_Claim_Notes.pdf: • 02/12/2025: There were significant damages to the dwelling and are estimated to be
+            around $3800. As such amount of $3800 will be reserved to remediate the dwelling
+            damages.
+        description: This column contains a collection of notes related to a specific claim, including dates, descriptions of damages, and estimated costs for repairs, providing a chronological record of the claim's progression and associated expenses.
+        synonyms:
+          - piece
+          - segment
+          - part
+          - portion
+          - section
+          - block
+          - fragment
+          - slice
+      - name: LANGUAGE
+        expr: LANGUAGE
+        data_type: VARCHAR(7)
+        sample_values:
+          - English
+        description: The language in which the note was written.
+        synonyms:
+          - tongue
+          - dialect
+          - speech
+          - lingo
+          - vernacular
+          - idiom
+      - name: CLAIM_NO
+        expr: CLAIM_NO
+        description: Unique identifier for a claim, used to track and manage individual claims submitted by patients or healthcare providers for reimbursement or insurance coverage.
+        synonyms:
+          - claim_number
+          - claim_id
+          - claim_reference
+          - policy_number
+          - claim_identifier
+          - claim_code
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - '1899'
+    description: ''
+    synonyms: []
+    primary_key:
+      columns:
+        - CLAIM_NO
+  - name: PARSED_INVOICES
+    base_table:
+      database: INSURANCE_CLAIMS_DEMO
+      schema: LOSS_CLAIMS
+      table: PARSED_INVOICES
+    dimensions:
+      - name: FILENAME
+        expr: FILENAME
+        data_type: VARCHAR(255)
+        sample_values:
+          - invoice.png
+        description: The name of the file from which the invoice was parsed.
+        synonyms:
+          - file_name
+          - document_name
+          - file_title
+          - document_title
+          - file_identifier
+          - file_label
+      - name: EXTRACTED_CONTENT
+        expr: EXTRACTED_CONTENT
+        data_type: VARCHAR(16777216)
+        sample_values:
+          - |-
+            INVOICE Invoice ID: INV-2025-001
+            Date: July 15, 2025
+            Billed To:
+            Claimant ID: 19
+            Policy No: 19
+            Claim No: 1899
+            Inv Line # Line No Description Currency Amount
+            18 Damaged Dwelling USD 4000.00
+            2 18 Damaged Dwelling USD 4000.00
+            3 19 Damaged Fence USD 3000.00
+            4 19 Damaged Fence USD 2000.00
+            20 Damaged Lawn USD 2000.00
+            6 20 Damaged Lawn USD 1000.00
+            Total: USD 16000.00
+            Thank you for your business!
+            123 Main Street, Anytown, USAI contact@example.com
+        description: The column EXTRACTED_CONTENT contains the extracted text from invoices, including invoice IDs, dates, billing information, claimant and policy details, line item descriptions, currencies, and amounts, as well as a total amount and a closing message.
+        synonyms:
+          - parsed_data
+          - extracted_text
+          - invoice_text
+          - parsed_invoice_content
+          - extracted_info
+    time_dimensions:
+      - name: PARSE_DATE
+        expr: PARSE_DATE
+        data_type: TIMESTAMP_NTZ(9)
+        sample_values:
+          - 2025-08-19T11:30:06.584+0000
+        description: Date and time when the invoice was parsed and extracted from its original format.
+        synonyms:
+          - parsed_timestamp
+          - extraction_date
+          - content_date
+          - timestamp_parsed
+          - date_extracted
+          - parsing_date
+          - ingestion_date
+          - load_date
+relationships:
+  - name: claim_to_claim_lines_claim_id
+    left_table: CLAIM_LINES
+    relationship_columns:
+      - left_column: CLAIM_NO
+        right_column: CLAIM_NO
+    right_table: CLAIMS
+  - name: claim_lines_to_authorization
+    left_table: CLAIM_LINES
+    relationship_columns:
+      - left_column: PERFORMER_ID
+        right_column: PERFORMER_ID
+    right_table: AUTHORIZATION
+  - name: financial_to_claim_lines
+    left_table: CLAIM_LINES
+    relationship_columns:
+      - left_column: LINE_NO
+        right_column: LINE_NO
+    right_table: FINANCIAL_TRANSACTIONS
+  - name: claim_to_claim_notes
+    left_table: CLAIMS
+    relationship_columns:
+      - left_column: CLAIM_NO
+        right_column: CLAIM_NO
+    right_table: NOTES_CHUNK_TABLE
+  - name: financial_to_invoice
+    left_table: INVOICES
+    relationship_columns:
+      - left_column: LINE_NO
+        right_column: LINE_NO
+    right_table: FINANCIAL_TRANSACTIONS
+  - name: claim_lines_to_invoice
+    left_table: INVOICES
+    relationship_columns:
+      - left_column: LINE_NO
+        right_column: LINE_NO
+    right_table: CLAIM_LINES
+verified_queries:
+  - name: Was a payment made in excess of the performer authority? Please respond yes or no and provide more details if yes.
+    question: Was a payment made in excess of the performer authority? Please respond yes or no and provide more details if yes.
+    sql: |-
+      WITH auth_fin_tx AS (
+        SELECT
+          a.performer_id,
+          a.to_amt AS max_authorized_amt,
+          ft.fin_tx_amt
+        FROM
+          authorization AS a
+          INNER JOIN claim_lines AS cl ON a.performer_id = cl.performer_id
+          INNER JOIN financial_transactions AS ft ON cl.line_no = ft.line_no
+      )
+      SELECT
+        performer_id,
+        max_authorized_amt,
+        fin_tx_amt,
+        CASE
+          WHEN fin_tx_amt > max_authorized_amt THEN 'Yes'
+          ELSE 'No'
+        END AS payment_exceeds_authority
+      FROM
+        auth_fin_tx
+    use_as_onboarding_question: false
+    verified_by: Marie Duran
+    verified_at: 1755720163
+  - name: Was a payment issued to the vendor 30+ calendar days after the invoice was received? If yes, please provide details
+    question: Was a payment issued to the vendor 30+ calendar days after the invoice was received? If yes, please provide details
+    sql: |-
+      WITH invoice_payment AS (
+        SELECT
+          i.vendor,
+          i.invoice_date,
+          ft.fin_tx_post_dt,
+          DATEDIFF(DAY, i.invoice_date, ft.fin_tx_post_dt) AS days_between
+        FROM
+          invoices AS i
+          LEFT OUTER JOIN financial_transactions AS ft ON i.line_no = ft.line_no
+      )
+      SELECT
+        vendor,
+        invoice_date,
+        fin_tx_post_dt,
+        days_between,
+        CASE
+          WHEN days_between > 30 THEN 'Yes'
+          ELSE 'No'
+        END AS payment_issued_late
+      FROM
+        invoice_payment
+    use_as_onboarding_question: false
+    verified_by: Marie Duran
+    verified_at: 1755720298
+  - name: Was a payment issued to the vendor 8-13 calendar days after the invoice was received?
+    question: Was a payment issued to the vendor 8-13 calendar days after the invoice was received?
+    sql: |-
+      WITH invoice_payment AS (
+        SELECT
+          i.vendor,
+          i.invoice_date,
+          ft.fin_tx_post_dt,
+          DATEDIFF(DAY, i.invoice_date, ft.fin_tx_post_dt) AS days_between
+        FROM
+          invoices AS i
+          LEFT OUTER JOIN financial_transactions AS ft ON i.line_no = ft.line_no
+      )
+      SELECT
+        vendor,
+        invoice_date,
+        fin_tx_post_dt,
+        days_between,
+        CASE
+          WHEN days_between BETWEEN 8
+          AND 13 THEN 'Yes'
+          ELSE 'No'
+        END AS payment_issued_within_range
+      FROM
+        invoice_payment
+    use_as_onboarding_question: false
+    verified_by: Marie Duran
+    verified_at: 1755720353
