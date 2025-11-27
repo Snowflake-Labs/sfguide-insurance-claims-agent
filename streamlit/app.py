@@ -32,12 +32,12 @@ API_TIMEOUT = 60000  # in milliseconds
 
 # Configuration for Snowflake objects
 AVAILABLE_SEMANTIC_MODELS_PATHS = [
-    "INS_CO.LOSS_CLAIMS.LOSS_EVIDENCE/loss_claims.yaml"
+    "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.LOSS_EVIDENCE/loss_claims.yaml"
 ]
-CLAIMS_TABLE_NAME = "INS_CO.LOSS_CLAIMS.CLAIMS"
-CLAIM_LINES_TABLE_NAME = "INS_CO.LOSS_CLAIMS.CLAIM_LINES"
-CLAIM_NOTES_TABLE_NAME = "INS_CO.LOSS_CLAIMS.PARSED_CLAIM_NOTES" 
-CLAIM_IMAGES_STAGE_NAME = "INS_CO.LOSS_CLAIMS.LOSS_EVIDENCE"
+CLAIMS_TABLE_NAME = "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CLAIMS"
+CLAIM_LINES_TABLE_NAME = "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CLAIM_LINES"
+CLAIM_NOTES_TABLE_NAME = "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.PARSED_CLAIM_NOTES" 
+CLAIM_IMAGES_STAGE_NAME = "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.LOSS_EVIDENCE"
 
 
 # --- Snowflake Session Initialization ---
@@ -218,7 +218,7 @@ def get_similarity_score(text1: str, text2: str) -> Optional[float]:
     """Calculates the AI_SIMILARITY score between two text inputs."""
     # The AI_SIMILARITY function is called directly with the input strings.
     sql_query = f"""
-    SELECT SNOWFLAKE.CORTEX.AI_SIMILARITY(
+    SELECT AI_SIMILARITY(
         '{text1.replace("'", "''")}',
         '{text2.replace("'", "''")}'
     );
