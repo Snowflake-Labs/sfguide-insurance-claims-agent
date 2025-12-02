@@ -521,11 +521,15 @@ $$
       },
       "SEARCH_CLAIM_NOTES": {
         "max_results": 4,
-        "search_service": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_CLAIM_NOTES"
+        "search_service": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_CLAIM_NOTES",
+        "id_column": "file_url",
+        "title_column": "filename"
       },
       "SEARCH_GUIDELINES": {
         "max_results": 4,
-        "search_service": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_GUIDELINES"
+        "search_service": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_GUIDELINES",
+        "id_column": "file_url",
+        "title_column": "filename"
       },
       "TEXT2SQL": {
         "execution_environment": {
