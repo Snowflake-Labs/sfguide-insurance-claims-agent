@@ -218,7 +218,7 @@ def get_similarity_score(text1: str, text2: str) -> Optional[float]:
     """Calculates the AI_SIMILARITY score between two text inputs."""
     # The AI_SIMILARITY function is called directly with the input strings.
     sql_query = f"""
-    SELECT AI_SIMILARITY(
+    SELECT SNOWFLAKE.CORTEX.AI_SIMILARITY(
         '{text1.replace("'", "''")}',
         '{text2.replace("'", "''")}'
     );
