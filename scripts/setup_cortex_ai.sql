@@ -324,6 +324,8 @@ create or replace semantic view INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CA_INSURANCE_C
 
 -- create agent --
 CREATE OR REPLACE AGENT INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CLAIMS_AUDIT_AGENT
+WITH PROFILE='{ "display_name": "Insurance Claims Agent" }'
+  COMMENT=$$ This agent analyzes insurance claims by combining structured data queries (Cortex Analyst) with unstructured document search (Cortex Search for guidelines and claim notes). It can audit claims for compliance, verify payments against authorization limits, transcribe call recordings, summarize evidence images, classify documents, and assess claim completeness. $$
 FROM SPECIFICATION
 $$
 {
