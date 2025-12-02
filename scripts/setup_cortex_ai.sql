@@ -323,7 +323,7 @@ create or replace semantic view INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CA_INSURANCE_C
 	with extension (CA='{"tables":[{"name":"AUTHORIZATION","dimensions":[{"name":"CURRENCY","sample_values":["USD"]},{"name":"PERFORMER_ID","sample_values":["181","171","191"]}],"facts":[{"name":"FROM_AMT","sample_values":["0.00"]},{"name":"TO_AMT","sample_values":["3000.00","2500.00","5000.00"]}]},{"name":"CLAIMS","dimensions":[{"name":"CAUSE_OF_LOSS","sample_values":["Hurricane"]},{"name":"CLAIM_NO","sample_values":["1899"]},{"name":"CLAIM_STATUS","sample_values":["Open"]},{"name":"CLAIMANT_ID","sample_values":["19"]},{"name":"LINE_OF_BUSINESS","sample_values":["Property"]},{"name":"LOSS_DESCRIPTION","sample_values":["Damaged dwelling and fence after the tree fell"]},{"name":"LOSS_STATE","sample_values":["NJ"]},{"name":"LOSS_ZIP_CODE","sample_values":["8820"]},{"name":"PERFORMER","sample_values":["18"]},{"name":"POLICY_NO","sample_values":["888"]}],"time_dimensions":[{"name":"CREATED_DATE","sample_values":["2025-01-06"]},{"name":"FNOL_COMPLETION_DATE","sample_values":["2025-01-06"]},{"name":"LOSS_DATE","sample_values":["2025-01-06"]},{"name":"REPORTED_DATE","sample_values":["2025-01-06"]}]},{"name":"CLAIM_LINES","dimensions":[{"name":"CLAIM_NO","sample_values":["1899"]},{"name":"CLAIM_STATUS","sample_values":["Open"]},{"name":"CLAIMANT_ID","sample_values":["19"]},{"name":"LINE_NO","sample_values":["17","18","16"]},{"name":"LOSS_DESCRIPTION","sample_values":["Damaged Dwelling","Damaged Fence","Damaged Lawn"]},{"name":"PERFORMER_ID","sample_values":["181","171","191"]}],"time_dimensions":[{"name":"CREATED_DATE","sample_values":["2025-01-06"]},{"name":"REPORTED_DATE","sample_values":["2025-01-06"]}]},{"name":"FINANCIAL_TRANSACTIONS","dimensions":[{"name":"CURRENCY","sample_values":["USD"]},{"name":"FINANCIAL_TYPE","sample_values":["RSV","PAY"]},{"name":"FXID","sample_values":["22","23","24"]},{"name":"LINE_NO","sample_values":["17","18","16"]}],"facts":[{"name":"FIN_TX_AMT","sample_values":["3000.00","3500.00","4000.00"]}],"time_dimensions":[{"name":"FIN_TX_POST_DT","sample_values":["2025-03-06","2025-06-15","2025-02-15"]}]},{"name":"INVOICES","dimensions":[{"name":"CURRENCY","sample_values":["USD"]},{"name":"DESCRIPTION","sample_values":["Hardware","Labor","Wooden Logs"]},{"name":"INV_ID","sample_values":["7","5","6"]},{"name":"INV_LINE_NBR","sample_values":["3","2","1"]},{"name":"LINE_NO","sample_values":["16","18","17"]},{"name":"VENDOR","sample_values":["LMN","XYZ","ABC"]}],"facts":[{"name":"INVOICE_AMOUNT","sample_values":["2500.00","1000.00","500.00"]}],"time_dimensions":[{"name":"INVOICE_DATE","sample_values":["2025-05-15","2025-03-18","2025-04-20"]}]}],"relationships":[{"name":"CLAIM_LINES_TO_AUTHORIZATION"},{"name":"CLAIM_TO_CLAIM_LINES_CLAIM_ID"},{"name":"FINANCIAL_TO_CLAIM_LINES"},{"name":"CLAIM_LINES_TO_INVOICE"},{"name":"FINANCIAL_TO_INVOICE"}],"verified_queries":[{"name":"Was a payment made in excess of the performer authority? Please respond yes or no and provide more details if yes.","question":"Was a payment made in excess of the performer authority? Please respond yes or no and provide more details if yes.","sql":"WITH auth_fin_tx AS (\\n  SELECT\\n    a.performer_id,\\n    a.to_amt AS max_authorized_amt,\\n    ft.fin_tx_amt\\n  FROM\\n    authorization AS a\\n    INNER JOIN claim_lines AS cl ON a.performer_id = cl.performer_id\\n    INNER JOIN financial_transactions AS ft ON cl.line_no = ft.line_no\\n)\\nSELECT\\n  performer_id,\\n  max_authorized_amt,\\n  fin_tx_amt,\\n  CASE\\n    WHEN fin_tx_amt > max_authorized_amt THEN ''Yes''\\n    ELSE ''No''\\n  END AS payment_exceeds_authority\\nFROM\\n  auth_fin_tx","use_as_onboarding_question":false,"verified_by":"Marie Duran","verified_at":1755720163},{"name":"Was a payment issued to the vendor 30+ calendar days after the invoice was received? If yes, please provide details","question":"Was a payment issued to the vendor 30+ calendar days after the invoice was received? If yes, please provide details","sql":"WITH invoice_payment AS (\\n  SELECT\\n    i.vendor,\\n    i.invoice_date,\\n    ft.fin_tx_post_dt,\\n    DATEDIFF(DAY, i.invoice_date, ft.fin_tx_post_dt) AS days_between\\n  FROM\\n    invoices AS i\\n    LEFT OUTER JOIN financial_transactions AS ft ON i.line_no = ft.line_no\\n)\\nSELECT\\n  vendor,\\n  invoice_date,\\n  fin_tx_post_dt,\\n  days_between,\\n  CASE\\n    WHEN days_between > 30 THEN ''Yes''\\n    ELSE ''No''\\n  END AS payment_issued_late\\nFROM\\n  invoice_payment","use_as_onboarding_question":false,"verified_by":"Marie Duran","verified_at":1755720298},{"name":"Was a payment issued to the vendor 8-13 calendar days after the invoice was received?","question":"Was a payment issued to the vendor 8-13 calendar days after the invoice was received?","sql":"WITH invoice_payment AS (\\n  SELECT\\n    i.vendor,\\n    i.invoice_date,\\n    ft.fin_tx_post_dt,\\n    DATEDIFF(DAY, i.invoice_date, ft.fin_tx_post_dt) AS days_between\\n  FROM\\n    invoices AS i\\n    LEFT OUTER JOIN financial_transactions AS ft ON i.line_no = ft.line_no\\n)\\nSELECT\\n  vendor,\\n  invoice_date,\\n  fin_tx_post_dt,\\n  days_between,\\n  CASE\\n    WHEN days_between BETWEEN 8\\n    AND 13 THEN ''Yes''\\n    ELSE ''No''\\n  END AS payment_issued_within_range\\nFROM\\n  invoice_payment","use_as_onboarding_question":false,"verified_by":"Marie Duran","verified_at":1755720353}]}');
 
 -- create agent --
-CREATE OR REPLACE AGENT SNOWFLAKE_INTELLIGENCE.AGENTS.CLAIMS_AUDIT_AGENT
+CREATE OR REPLACE AGENT INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CLAIMS_AUDIT_AGENT
 FROM SPECIFICATION
 $$
 {
@@ -331,7 +331,8 @@ $$
       "orchestration": "auto"
     },
     "instructions": {
-      "orchestration": "-If the user asks about claim completeness, deem a claim as complete if the following are available: Claim level data, claim lines, financial, claim notes",
+      "response": "In your response, address me by my first name",
+      "orchestration": "You are an insurance claims agent.\n\nPriority 1 (Analysis):\nUse CA_INS (Cortex Analyst with semantic view) for quantitative questions about the claim.\n\nUse the two Cortex Search tools (claim_notes, guidelines) for guidelines, notes, or qualitative \"why\" questions.\n\n-If the user asks about claim completeness, deem a claim as complete if the following are available: Claim level data, claim lines, financial, claim notes.\n\n-Produce charts when possible.",
       "sample_questions": [
         {
           "question": "Based on the state of new jersey's insurance claims guidelines, have any of my claims been outside of the mandated settlement window?"
@@ -343,7 +344,7 @@ $$
           "question": "Was a payment made in excess of the reserve amount for claim 1899?"
         },
         {
-          "question": "Can you transcribe the media file 'consultation_5_mix_es_en.wav stored in '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence'?"
+          "question": "Can you transcribe the media file 'ins_co_1899_call.wav' stored in '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence'?"
         },
         {
           "question": "What is the callers intent?"
@@ -369,21 +370,21 @@ $$
       {
         "tool_spec": {
           "type": "cortex_analyst_text_to_sql",
-          "name": "CA_INS",
+          "name": "TEXT2SQL",
           "description": "AUTHORIZATION:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table manages authorization limits for performers/providers in the insurance claims system. It defines spending authority ranges with minimum and maximum amounts that can be authorized by specific performers.\n- The table establishes financial controls by setting authorization boundaries, ensuring that claim payments stay within approved limits for each performer.\n- LIST OF COLUMNS: PERFORMER_ID (unique identifier for performer - links to PERFORMER_ID in CLAIM_LINES), CURRENCY (transaction currency), FROM_AMT (minimum authorization amount), TO_AMT (maximum authorization amount)\n\nCLAIMS:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This is the main claims table containing comprehensive information about insurance claims including policy details, loss information, and claim status. It serves as the central hub for claim management with details about when losses occurred, were reported, and processed.\n- The table tracks the complete lifecycle of claims from initial loss occurrence through reporting and processing, providing essential data for claim analysis and management.\n- LIST OF COLUMNS: CLAIM_NO (unique claim identifier), LINE_OF_BUSINESS (business type), CLAIM_STATUS (current claim state), CAUSE_OF_LOSS (loss reason), CLAIMANT_ID (person submitting claim), PERFORMER (service provider - links to PERFORMER_ID in other tables), POLICY_NO (insurance policy identifier), LOSS_DESCRIPTION (damage details), LOSS_STATE (loss location state), LOSS_ZIP_CODE (loss location zip), CREATED_DATE (claim creation date), LOSS_DATE (when loss occurred), REPORTED_DATE (when claim was reported), FNOL_COMPLETION_DATE (first notice of loss completion)\n\nCLAIM_LINES:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table contains individual line items for each claim, breaking down claims into specific components or damages. Each line represents a separate aspect of the overall claim with its own status and performer assignment.\n- The table enables detailed tracking of claim components, allowing for granular management of different types of damages or services within a single claim.\n- LIST OF COLUMNS: CLAIM_NO (links to CLAIM_NO in CLAIMS), LOSS_DESCRIPTION (specific line item damage), CLAIM_STATUS (line item status), CLAIMANT_ID (claim submitter), PERFORMER_ID (assigned service provider - links to AUTHORIZATION), LINE_NO (unique line identifier - links to FINANCIAL_TRANSACTIONS and INVOICES), CREATED_DATE (line creation date), REPORTED_DATE (line reporting date)\n\nFINANCIAL_TRANSACTIONS:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table records all financial activities related to claims including payments and reserves. It tracks the monetary flow for each claim line item with transaction types, amounts, and posting dates.\n- The table provides complete financial audit trail for claims processing, enabling tracking of reserves set aside and actual payments made for claim resolution.\n- LIST OF COLUMNS: FXID (foreign exchange transaction ID), FINANCIAL_TYPE (transaction category like RSV/PAY), CURRENCY (transaction currency), LINE_NO (links to CLAIM_LINES and INVOICES), FIN_TX_POST_DT (transaction posting date), FIN_TX_AMT (transaction amount)\n\nINVOICES:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table contains invoice information from vendors providing services or materials for claim repairs. It includes detailed line items with descriptions, amounts, and vendor information for tracking claim-related expenses.\n- The table facilitates vendor payment processing and expense tracking by maintaining detailed records of all invoiced items and their associated costs.\n- LIST OF COLUMNS: INV_ID (invoice identifier), INV_LINE_NBR (invoice line number), LINE_NO (links to CLAIM_LINES and FINANCIAL_TRANSACTIONS), DESCRIPTION (item/service description), CURRENCY (invoice currency), VENDOR (supplier name), INVOICE_DATE (invoice issue date), INVOICE_AMOUNT (invoice total)\n\nGUIDELINES_CHUNK_TABLE:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table stores processed guidelines documents in chunks for easy retrieval and reference. It contains insurance claims processing guidelines broken into manageable text segments.\n- The table supports compliance and procedural guidance by providing searchable access to regulatory and company guidelines for claims handling.\n- LIST OF COLUMNS: FILENAME (guideline document name), FILE_URL (document storage location), CHUNK (guideline text segment), LANGUAGE (content language)\n\nNOTES_CHUNK_TABLE:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table contains claim-specific notes and documentation broken into text chunks for analysis and retrieval. It stores detailed notes about claim progress, decisions, and observations.\n- The table provides comprehensive claim documentation history, enabling detailed tracking of claim handling decisions and progress updates.\n- LIST OF COLUMNS: FILENAME (notes document name), FILE_URL (document storage location), CHUNK (notes text segment), LANGUAGE (content language), CLAIM_NO (links to CLAIMS table)\n\nPARSED_INVOICES:\n- Database: INSURANCE_CLAIMS_DEMO, Schema: LOSS_CLAIMS\n- This table contains extracted content from invoice images or documents that have been processed through parsing technology. It stores the raw extracted text from invoice files for further processing.\n- The table enables automated invoice processing by capturing and storing parsed invoice content for integration with the structured invoice data.\n- LIST OF COLUMNS: FILENAME (source invoice file), EXTRACTED_CONTENT (parsed invoice text), PARSE_DATE (when parsing occurred)\n\nREASONING:\nThis semantic model represents a comprehensive insurance claims management system that tracks the complete lifecycle of property insurance claims from initial loss through financial settlement. The model centers around claims and their associated line items, with strong relationships connecting authorization limits, financial transactions, invoices, and supporting documentation. The system enforces financial controls through performer authorization limits while maintaining detailed audit trails of all financial activities and supporting documentation.\n\nDESCRIPTION:\nThe CA_INSURANCE_CLAIMS_DEMO semantic model is a comprehensive insurance claims management system from the INSURANCE_CLAIMS_DEMO database's LOSS_CLAIMS schema that tracks property insurance claims from loss occurrence through financial settlement. The model centers on the CLAIMS table which connects to CLAIM_LINES for detailed damage breakdowns, with each line item linked to FINANCIAL_TRANSACTIONS for payment tracking and INVOICES for vendor billing. The system includes financial controls through the AUTHORIZATION table that sets spending limits for performers, while NOTES_CHUNK_TABLE and GUIDELINES_CHUNK_TABLE provide supporting documentation and regulatory guidance. The PARSED_INVOICES table enables automated processing of invoice documents, creating a complete end-to-end claims processing workflow with full audit trails and compliance tracking."
         }
       },
       {
         "tool_spec": {
           "type": "cortex_search",
-          "name": "Guidelines",
+          "name": "SEARCH_GUIDELINES",
           "description": ""
         }
       },
       {
         "tool_spec": {
           "type": "cortex_search",
-          "name": "claim_notes",
+          "name": "SEARCH_CLAIM_NOTES",
           "description": ""
         }
       },
@@ -457,12 +458,27 @@ $$
             ]
           }
         }
+      },
+      {
+        "tool_spec": {
+          "type": "generic",
+          "name": "REDACT_EMAIL",
+          "description": "PROCEDURE/FUNCTION DETAILS:\n- Type: Table Function\n- Language: SQL\n- Signature: (CLAIM_NO_PARAM VARCHAR)\n- Returns: TABLE with claim details including original and AI-redacted email content\n- Execution: OWNER privileges with standard null handling\n- Volatility: Stable (consistent results for same inputs)\n- Primary Function: Email content retrieval and PII redaction using Snowflake Cortex AI\n- Target: CUSTOMER_CLAIM_EMAILS table records filtered by claim number\n- Error Handling: Standard SQL exception handling with resultset validation\n\nDESCRIPTION:\nThis table function retrieves customer claim email records for a specific claim number and automatically redacts personally identifiable information (PII) from email content using Snowflake's Cortex AI_REDACT functionality. The function returns both the original email body and a redacted version where sensitive information like names, addresses, phone numbers, and other PII types are automatically detected and masked. This is particularly valuable for compliance teams, customer service representatives, and data analysts who need to review claim correspondence while maintaining privacy standards and regulatory compliance. The function executes with owner privileges to ensure consistent access to the underlying email data, and results are ordered by received date in descending order to show the most recent communications first. Users should ensure they have appropriate permissions to access claim data and understand that the AI redaction process may occasionally miss context-specific sensitive information that requires manual review.\n\nUSAGE SCENARIOS:\n- Compliance audits: Generate redacted email trails for regulatory reviews while protecting customer privacy and meeting data protection requirements\n- Customer service training: Provide sanitized real-world email examples for staff training without exposing actual customer personal information\n- Data analysis and reporting: Enable analysts to study communication patterns and content themes in claim emails without accessing sensitive personal details",
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "claim_no_param": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "claim_no_param"
+            ]
+          }
+        }
       }
     ],
     "tool_resources": {
-      "CA_INS": {
-        "semantic_view": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CA_INSURANCE_CLAIMS_DEMO"
-      },
       "CLASSIFY_FUNCTION": {
         "execution_environment": {
           "query_timeout": 30,
@@ -472,12 +488,6 @@ $$
         "identifier": "INSURANCE_CLAIMS_DEMO_DB.ANALYTICS.CLASSIFY_DOCUMENT",
         "name": "CLASSIFY_DOCUMENT(VARCHAR, DEFAULT VARCHAR)",
         "type": "function"
-      },
-      "Guidelines": {
-        "max_results": 4,
-        "name": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_GUIDELINES",
-        "title_column": "filename",
-        "id_column": "file_url"
       },
       "Image_summary": {
         "execution_environment": {
@@ -499,6 +509,31 @@ $$
         "name": "PARSE_DOCUMENT_FROM_STAGE(VARCHAR)",
         "type": "function"
       },
+      "REDACT_EMAIL": {
+        "execution_environment": {
+          "query_timeout": 180,
+          "type": "warehouse",
+          "warehouse": "CLAIMS_AGENT_WH"
+        },
+        "identifier": "INS_CO.LOSS_CLAIMS.REDACT_CLAIM_EMAIL_PII",
+        "name": "REDACT_CLAIM_EMAIL_PII(VARCHAR)",
+        "type": "procedure"
+      },
+      "SEARCH_CLAIM_NOTES": {
+        "max_results": 4,
+        "search_service": "INS_CO.LOSS_CLAIMS.INS_CO_CLAIM_NOTES"
+      },
+      "SEARCH_GUIDELINES": {
+        "max_results": 4,
+        "search_service": "INS_CO.LOSS_CLAIMS.INS_CO_GUIDELINES"
+      },
+      "TEXT2SQL": {
+        "execution_environment": {
+          "type": "warehouse",
+          "warehouse": "CLAIMS_AGENT_WH"
+        },
+        "semantic_model_file": "@INS_CO.LOSS_CLAIMS.MODELS/CA_INS_CO.yaml"
+      },
       "TRANSCRIBE_CALLS": {
         "execution_environment": {
           "query_timeout": 60,
@@ -509,12 +544,6 @@ $$
         "name": "TRANSCRIBE_AUDIO_SIMPLE(VARCHAR, DEFAULT VARCHAR)",
         "type": "procedure"
       },
-      "claim_notes": {
-        "max_results": 4,
-        "name": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_CLAIM_NOTES",
-        "title_column": "filename",
-        "id_column": "file_url"
-      }
     }
   }
 $$;
@@ -541,3 +570,28 @@ AS
 -- Activate the tasks to start automatic URL refresh
 ALTER TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_NOTES_PRESIGNED_URLS_TASK RESUME;
 ALTER TASK INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REFRESH_GUIDELINES_PRESIGNED_URLS_TASK RESUME;
+
+USE ROLE ACCOUNTADMIN;
+CREATE OR REPLACE PROCEDURE INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.ADD_AGENT_TO_INTELLIGENCE()
+RETURNS VARCHAR
+LANGUAGE SQL
+EXECUTE AS CALLER
+AS
+$$
+BEGIN
+    BEGIN
+        ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT 
+          DROP AGENT INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CLAIMS_AUDIT_AGENT;
+    EXCEPTION
+        WHEN OTHER THEN
+            NULL;
+    END;
+    
+    ALTER SNOWFLAKE INTELLIGENCE SNOWFLAKE_INTELLIGENCE_OBJECT_DEFAULT 
+      ADD AGENT INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.CLAIMS_AUDIT_AGENT;
+    
+    RETURN 'Agent added successfully to Snowflake Intelligence';
+END;
+$$;
+
+CALL INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.ADD_AGENT_TO_INTELLIGENCE();
