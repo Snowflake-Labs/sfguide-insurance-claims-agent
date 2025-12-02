@@ -344,7 +344,7 @@ $$
           "question": "Was a payment made in excess of the reserve amount for claim 1899?"
         },
         {
-          "question": "Can you transcribe the media file 'INSURANCE_CLAIMS_DEMO_1899_call.wav' stored in '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence'?"
+          "question": "Can you transcribe the media file 'ins_co_1899_call.wav' stored in '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence'?"
         },
         {
           "question": "What is the callers intent?"
@@ -532,7 +532,7 @@ $$
           "type": "warehouse",
           "warehouse": "CLAIMS_AGENT_WH"
         },
-        "semantic_model_file": "@INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.MODELS/CA_INSURANCE_CLAIMS_DEMO.yaml"
+        "semantic_model_file": "@INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.LOSS_EVIDENCE/loss_claims.yaml"
       },
       "TRANSCRIBE_CALLS": {
         "execution_environment": {
