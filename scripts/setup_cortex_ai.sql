@@ -344,7 +344,7 @@ $$
           "question": "Was a payment made in excess of the reserve amount for claim 1899?"
         },
         {
-          "question": "Can you transcribe the media file 'ins_co_1899_call.wav' stored in '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence'?"
+          "question": "Can you transcribe the media file 'INSURANCE_CLAIMS_DEMO_1899_call.wav' stored in '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence'?"
         },
         {
           "question": "What is the callers intent?"
@@ -515,24 +515,24 @@ $$
           "type": "warehouse",
           "warehouse": "CLAIMS_AGENT_WH"
         },
-        "identifier": "INS_CO.LOSS_CLAIMS.REDACT_CLAIM_EMAIL_PII",
+        "identifier": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.REDACT_CLAIM_EMAIL_PII",
         "name": "REDACT_CLAIM_EMAIL_PII(VARCHAR)",
         "type": "procedure"
       },
       "SEARCH_CLAIM_NOTES": {
         "max_results": 4,
-        "search_service": "INS_CO.LOSS_CLAIMS.INS_CO_CLAIM_NOTES"
+        "search_service": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_CLAIM_NOTES"
       },
       "SEARCH_GUIDELINES": {
         "max_results": 4,
-        "search_service": "INS_CO.LOSS_CLAIMS.INS_CO_GUIDELINES"
+        "search_service": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.INSURANCE_CLAIMS_DEMO_GUIDELINES"
       },
       "TEXT2SQL": {
         "execution_environment": {
           "type": "warehouse",
           "warehouse": "CLAIMS_AGENT_WH"
         },
-        "semantic_model_file": "@INS_CO.LOSS_CLAIMS.MODELS/CA_INS_CO.yaml"
+        "semantic_model_file": "@INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.MODELS/CA_INSURANCE_CLAIMS_DEMO.yaml"
       },
       "TRANSCRIBE_CALLS": {
         "execution_environment": {
