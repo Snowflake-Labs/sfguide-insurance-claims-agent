@@ -30,10 +30,11 @@ Follow these steps to set up the environment and run the demo.
 
 ### Step 1: Initialize Database Objects
 
-1.  Run the `setup.sql` file. This script creates the necessary database objects:
-    * **Database:** `ins_co`
-    * **Schema:** `loss_claims`
-    * **Stage:** `loss_evidence`
+1. Log into Snowflake and open a new SQL worksheet.
+2. Import and run `scripts/setup.sql`. This script creates the necessary database objects:
+    * **Database:** `INSURANCE_CLAIMS_DEMO`
+    * **Schema:** `LOSS_CLAIMS`
+    * **Stage:** `LOSS_EVIDENCE`
     * **Tables:**
         * `Claims`
         * `Claim Lines`
@@ -47,38 +48,15 @@ Follow these steps to set up the environment and run the demo.
 
 ### Step 2: Upload Evidence Files
 
-1.  Upload the following files to the **`loss_evidence`** stage:
-    * `1899_claim_evidence1.jpeg`
-    * `1899_claim_evidence2.jpeg`
-    * `Claim_Notes.pdf`
-    * `Guidelines.pdf`
-    * `invoice.png`
-    * `Gemini_generated_3.jpeg`
-    * `ins_co_1899_call.wav`
+1. Upload all files in the `files` directory to the **`LOSS_EVIDENCE`** stage in `INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS`.
 
-### Step 3: Configure Cortex Analyst
+### Step 3: Configure Cortex AI
 
-1.  The setup script automatically creates a **`Models`** stage.
-2.  Upload the following `.sql` file to create a semantic view:
-    * `CA_INS_CO`
-3.  **Create a Cortex Analyst** using the uploaded `.sql` configuration file.
+1. Import and run `scripts/setup_cortex_ai.sql`. This script sets up the Cortex AI components including the semantic view and agent configuration.
 
-### Step 4: Deploy the Interface
+### Step 4: Start Using the Agent
 
-Choose one of the following methods for deploying the user interface:
-
-#### Option A: Streamlit in Snowflake
-
-1.  Create a new **Streamlit application** within the `ins_co` database and `loss_claims` schema.
-2.  Paste the contents of the **`streamlit.py`** file into the Streamlit in Snowflake (SIS) editor.
-
-#### Option B: Snowflake Intelligence Agent
-
-1.  Create an **Agent** and use it directly within Snowflake Intelligence.
-2.  Run **Custom_tools.sql**.
-3.  Run the **Tools config**.
-4.  Run the **Agents config**.
-
+1. Navigate to **Snowflake Intelligence** and start asking questions!
 
 ### Sample Questions this demo helps answer:
 
@@ -124,3 +102,35 @@ Choose one of the following methods for deploying the user interface:
 | **IT & Data Science / Data Engineering** | **Leveraging Modern Data Architecture.** This demo validates the use case for **Snowflake Cortex** and demonstrates that the data platform can handle unstructured data (PDFs, images, audio) alongside core transactional data, increasing the value of their data investment. |
 | **Compliance & Legal Teams** | **Auditability and Compliance.** By combining structured data with parsed state guidelines, the system helps ensure claims decisions are compliant with regulations, providing a clear, auditable trail for every decision. |
 | **Chief Operating Officer (COO)** | **Cost Reduction and Customer Experience.** Automating document ingestion and accelerating the decision process directly reduces operational costs and leads to faster, more positive interactions for policyholders. |
+
+## 📊 Interactive Streamlit Application
+
+In addition to Snowflake Intelligence, this demo includes a comprehensive **Cortex Analyst App for Insurance Claim Audits** built with Streamlit. This application provides a streamlined interface for auditing insurance claims using natural language queries and AI-powered analysis.
+
+### Access the Streamlit app
+- Navigate to **Projects -> Streamlit**
+- **App location:** ```INSURANCE_CLAIMS_DEMO.STREAMLIT.APP```
+
+### 🔍 Key Features
+
+**Claims Audit & Chat Interface:**
+- **Claim Selection & Details:** Browse and select specific claims to view comprehensive details including claim status, cause of loss, and parsed claim notes
+- **Predefined Audit Questions:** Quick access to common audit scenarios with one-click question submission
+- **AI-Powered Chat:** Natural language conversation interface powered by Snowflake Cortex Analyst that automatically generates and executes SQL queries based on semantic models
+- **Real-time Query Execution:** View generated SQL queries and results with interactive data tables and charts
+
+**Image Audit Capabilities:**
+- **Visual Evidence Analysis:** Upload and analyze claim-related images stored in Snowflake stages
+- **AI Image Summaries:** Generate detailed descriptions of damage photos and evidence using multimodal Cortex COMPLETE
+- **Semantic Similarity Scoring:** Compare image content against claim descriptions using Cortex AI_SIMILARITY to verify evidence alignment
+- **Fraud Detection Support:** Identify discrepancies between reported incidents and visual evidence
+
+### 🛠️ Technical Implementation
+
+The application demonstrates advanced Cortex capabilities:
+- **Document Intelligence:** Uses `PARSE_DOCUMENT` for OCR text extraction from PDFs and scanned documents
+- **Cortex Search Service:** Enables semantic search across unstructured text like claim notes and compliance guidelines
+- **Multimodal Analysis:** Leverages `COMPLETE` function with image inputs for visual content understanding
+- **Semantic Models:** Utilizes YAML-defined semantic models to translate natural language into complex SQL queries
+
+This Streamlit interface serves as a practical demonstration of how insurance professionals can leverage Snowflake's AI capabilities for efficient, accurate claim processing and fraud detection.
