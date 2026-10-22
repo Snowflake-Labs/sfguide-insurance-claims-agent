@@ -15,15 +15,14 @@ INSERT INTO PARSED_CLAIM_NOTES (FILENAME, EXTRACTED_CONTENT, CLAIM_NO)
 SELECT
     t1.RELATIVE_PATH AS FILENAME,
     t1.EXTRACTED_CONTENT,
-    flattened.value:answer::VARCHAR AS CLAIM_NO
+    ex.extracted:response:claim_no::VARCHAR AS CLAIM_NO
 FROM
     (
         SELECT
             RELATIVE_PATH,
             TO_VARCHAR(
-                SNOWFLAKE.CORTEX.PARSE_DOCUMENT(
-                    '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence',
-                    RELATIVE_PATH,
+                AI_PARSE_DOCUMENT(
+                    TO_FILE('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', RELATIVE_PATH),
                     {'mode': 'OCR'}
                 ):content
             ) AS EXTRACTED_CONTENT
@@ -32,11 +31,14 @@ FROM
         WHERE
             RELATIVE_PATH LIKE '%Claim_Note%'
     ) AS t1,
-    LATERAL FLATTEN(
-        input => SNOWFLAKE.CORTEX.EXTRACT_ANSWER(t1.EXTRACTED_CONTENT, 'What is the claim number?')
-    ) AS flattened
+    LATERAL (
+        SELECT AI_EXTRACT(
+            text => t1.EXTRACTED_CONTENT,
+            responseFormat => {'claim_no': 'What is the claim number?'}
+        ) AS extracted
+    ) AS ex
 WHERE
-    flattened.value:score::NUMBER >= 0.5;
+    ex.extracted:response:claim_no IS NOT NULL;
 
 CREATE OR REPLACE TABLE PARSED_GUIDELINES (
     FILENAME VARCHAR(255),
@@ -48,9 +50,8 @@ INSERT INTO PARSED_GUIDELINES (FILENAME, EXTRACTED_CONTENT)
 SELECT
     t1.RELATIVE_PATH AS FILENAME,
     TO_VARCHAR(
-        SNOWFLAKE.CORTEX.PARSE_DOCUMENT(
-            '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence',
-            t1.RELATIVE_PATH,
+        AI_PARSE_DOCUMENT(
+                    TO_FILE('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', t1.RELATIVE_PATH),
             {'mode': 'OCR'}
         ):content
     ) AS EXTRACTED_CONTENT
@@ -72,15 +73,14 @@ SELECT
     t1.RELATIVE_PATH,
     t1.EXTRACTED_CONTENT,
     -- Extract the answer from the flattened JSON object
-    flattened.value:answer::VARCHAR AS CLAIM_NO
+    ex.extracted:response:claim_no::VARCHAR AS CLAIM_NO
 FROM
     (
         SELECT
             RELATIVE_PATH,
             TO_VARCHAR(
-                SNOWFLAKE.CORTEX.PARSE_DOCUMENT(
-                    '@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence',
-                    RELATIVE_PATH,
+                AI_PARSE_DOCUMENT(
+                    TO_FILE('@INSURANCE_CLAIMS_DEMO.loss_claims.loss_evidence', RELATIVE_PATH),
                     {'mode': 'OCR'}
                 ):content
             ) AS EXTRACTED_CONTENT
@@ -89,11 +89,14 @@ FROM
         WHERE
             RELATIVE_PATH LIKE '%invoice%'
     ) AS t1,
-    LATERAL FLATTEN(
-        input => SNOWFLAKE.CORTEX.EXTRACT_ANSWER(t1.EXTRACTED_CONTENT, 'What is the claim no?')
-    ) AS flattened
+    LATERAL (
+        SELECT AI_EXTRACT(
+            text => t1.EXTRACTED_CONTENT,
+            responseFormat => {'claim_no': 'What is the claim no?'}
+        ) AS extracted
+    ) AS ex
 WHERE
-    flattened.value:score::NUMBER >= 0.5;
+    ex.extracted:response:claim_no IS NOT NULL;
 
 ----- chunk data in claim notes and guidelines -----
 
@@ -213,7 +216,7 @@ CREATE OR REPLACE FUNCTION INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.GET_IMAGE_SUMMARY("
 RETURNS VARCHAR
 LANGUAGE SQL
 AS '
-    SELECT SNOWFLAKE.CORTEX.COMPLETE(
+    SELECT AI_COMPLETE(
         ''claude-3-5-sonnet'',
         ''Summarize the key insights from the attached image in 100 words.'',
         TO_FILE(''@'' || STAGE_NAME || ''/'' || IMAGE_FILE)
@@ -549,7 +552,7 @@ $$
         "identifier": "INSURANCE_CLAIMS_DEMO.LOSS_CLAIMS.TRANSCRIBE_AUDIO_SIMPLE",
         "name": "TRANSCRIBE_AUDIO_SIMPLE(VARCHAR, DEFAULT VARCHAR)",
         "type": "procedure"
-      },
+      }
     }
   }
 $$;
